@@ -1,8 +1,8 @@
-#Implemented by @nayariml 
-
 from math import inf
 import os
+import subprocess
 import pickle
+import ipdb
 from matplotlib import pyplot as plt
 from matplotlib import animation
 from mpl_toolkits.mplot3d import Axes3D
@@ -49,7 +49,7 @@ joints= {
     21: 'Left_small_toe', 22: 'Right_small_toe', 23: 'Left_ankle', 24: 'Right_ankle'
 }
 
-def torso(j):
+def torso(j): #mid hip
     hx = (j[2][0] + j[3][0])/2
     hy = (j[2][1] + j[3][1])/2
     hz = (j[2][2] + j[3][2])/2
@@ -59,7 +59,7 @@ def joints_three(joints):#links - bones
     j = joints
     MID_HIP = torso(j)
 
-    return[[j[RIGHT_EYE], j[LEFT_EYE]], [j[RIGHT_EYE],j[RIGHT_EAR]], [j[LEFT_EYE],j[LEFT_EAR]], [j[RIGHT_EYE], j[NOSE]], [j[LEFT_EYE], j[NOSE]],[j[HEAD],j[NECK]],[j[NECK],j[LEFT_SHOULDER]],
+    return[[j[RIGHT_EYE], j[LEFT_EYE]], [j[LEFT_EAR],j[RIGHT_EAR]], [j[RIGHT_EYE],j[RIGHT_EAR]], [j[LEFT_EAR],j[LEFT_EYE]], [j[RIGHT_EYE], j[NOSE]], [j[LEFT_EYE], j[NOSE]],[j[HEAD],j[NECK]],[j[NECK],j[LEFT_SHOULDER]],
             [j[NECK],j[RIGHT_SHOULDER]], [j[RIGHT_SHOULDER], j[RIGHT_ELBOW]], [j[RIGHT_SHOULDER], j[RIGHT_ELBOW]],
             [j[LEFT_SHOULDER], j[LEFT_ELBOW]],[j[RIGHT_ELBOW], j[RIGHT_WRIST]], [j[LEFT_ELBOW], j[LEFT_WRIST]], [j[NECK], MID_HIP], [MID_HIP, j[RIGHT_HIP]],
             [j[RIGHT_HIP], j[RIGHT_KNEE]], [j[RIGHT_KNEE], j[RIGHT_ANKLE]], [j[RIGHT_ANKLE], j[RIGHT_HEEL]], [j[RIGHT_HEEL], j[RIGHT_BTOE]], [j[RIGHT_BTOE],
@@ -71,12 +71,11 @@ def mkdir(dir_path):
         os.makedirs(dir_path)
     return
 
-
-def draw_skeleton(_3Djoints, kintree, ouput_dir, ax=None):
+def draw_skeleton_frames(fi, _3Djoints, kintree, save_dir, ax=None):
     if ax is None:
         fig = plt.figure(frameon=False)
         ax = fig.add_subplot(111, projection='3d')
-        ax.view_init(elev=95, azim=-90)
+        ax.view_init(elev=95, azim=270)
     else:
         ax = ax
 
@@ -91,27 +90,68 @@ def draw_skeleton(_3Djoints, kintree, ouput_dir, ax=None):
         j2 = kintree[i][1]
         ax.plot([j1[0], j2[0]],
                 [j1[1]*-1, j2[1]*-1],
-                [j1[2]*-1, j2[2]*-1],
+                [j1[2], j2[2]], #[j1[2]*-1, j2[2]*-1]
                 color=colors[i], linestyle='-', linewidth=2, marker='o', markersize=5)
+
+    ouput_dir = save_dir + '/frame{:04d}.png'.format(fi)
+    print(fi)
     plt.savefig(ouput_dir)
     return ax
-def make_image(preds_path, output_dir, name_file, frame):
 
-  mkdir(output_dir)
+def make_video(output_path, img_dir, fps=25):
+        """
+        output_path is the final mp4 name
+        img_dir is where the images to make into video are saved.
+        """
+        cmd = [
+            'ffmpeg',
+            '-y',
+            '-threads', '16',
+            '-framerate', str(fps),
+            '-i', '{img_dir}/frame%04d.png'.format(img_dir=img_dir),
+            '-profile:v', 'baseline',
+            '-level', '3.0',
+            '-c:v', 'libx264',
+            '-pix_fmt', 'yuv420p',
+            '-an',
+            '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+            output_path,
+        ]
+        print(' '.join(cmd))
+        try:
+            err = subprocess.call(cmd)
+            if err:
+                ipdb.set_trace()
+        except OSError:
+            ipdb.set_trace()
+            print('OSError')
 
-  with open(preds_path, 'rb') as f:
-      preds = pickle.load(f)
-  f.close()
-  print('Get joints prediction')
 
-  _3Djoints = preds['joints']
+def make_image(preds_path, save_dir, file_name, frame):
 
-  save_dir = output_dir + name_file
+    mkdir(save_dir)
 
-  kintree = joints_three(_3Djoints[frame])
-  print('Draw skeleton')
-  draw_skeleton(_3Djoints[frame], kintree, save_dir)
+    with open(preds_path, 'rb') as f:
+        preds = pickle.load(f)
+    f.close()
 
+    print('Get joints prediction')
+
+    _3Djoints = preds['joints']
+
+    print('Len of video', len(_3Djoints))
+
+    len_video = len(_3Djoints)
+
+    for i in range(len_video):
+
+        kintree = joints_three(_3Djoints[i])
+        print('Draw skeleton, frame', i)
+        draw_skeleton_frames(i, _3Djoints[i], kintree, save_dir)
+
+    save = save_dir + file_name + '.mp4'
+
+    make_video(save, save_dir)
 
 
 if __name__ == '__main__':
@@ -122,20 +162,20 @@ if __name__ == '__main__':
 
     dir = main_dir + '/Rendered/'
 
-    action = 'Freekick/' #Penalty
+    action = 'Penalty/' #Penalty Freekick
 
-    name_file = '6_freekick' #
+    file_name = '14_penalty' #
 
-    input_dir = dir + action + name_file
+    input_dir = dir + action + file_name
 
-    ouput_dir = main_dir + '/animations/'
+    ouput_dir = main_dir + '/animations/' + file_name + '/'
 
     preds_file = 'hmmr_output.pkl'
 
-    input_alpha =  dir + action + name_file + '/hmmr_output/'
+    input_alpha =  dir + action + file_name + '/hmmr_output/'
 
     alphapose_in = input_alpha + preds_file
 
-    openpose_in = dir + action + name_file + '/hmmr_output_openpose/'+ preds_file
+    openpose_in = dir + action + file_name + '/hmmr_output_openpose/'+ preds_file
 
-    make_image(alphapose_in, ouput_dir, name_file, frame = 16)
+    make_image(openpose_in, ouput_dir, file_name, frame = 16)

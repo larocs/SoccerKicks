@@ -1,4 +1,3 @@
-#Implemented by @nayariml 
 import os
 import csv
 import cv2
@@ -251,10 +250,7 @@ def main(preds_alpha, preds_open, track_id, save_dir, ouput_dir, name_file, vide
             errors_dict = {}
             total_frame_open = None
             errors_dict = {
-                'MPJPE': None,
-                'MPJPE_PA': None,
                 'PCK': None,
-                'AUC': None
             }
             total_frame_open = None
             error2d_open = None
@@ -264,11 +260,11 @@ def main(preds_alpha, preds_open, track_id, save_dir, ouput_dir, name_file, vide
 
         print('Saving evaluation results to', save_csv)
 
-        save = [[name_file, int(video_frame_count), video_length, [width, height], total_frame_alpha, total_frame_open,error2d_alpha, error3d_alpha, error2d_open, error3d_open, errors_dict['PCK'], errors_dict['AUC']]]
+        save = [[name_file, int(video_frame_count), video_length, [width, height], total_frame_alpha, total_frame_open,error2d_alpha, error3d_alpha, error2d_open, error3d_open, errors_dict['PCK']]]
 
         with open(save_csv, "a") as csvfile:
             file_is_empty = os.stat(save_csv).st_size == 0
-            headers = ['id_Video_action','Video_input_frames','Video_input_lenght', 'Video_input_Resolution [width, height]', 'Hmmr-alphapose_output_frames','Hmmr-openpose_output_frames', 'error2d_alpha', 'error3d_alpha', 'error2d_open', 'error3d_open', 'PCK', 'AUC']
+            headers = ['id_Video_action','Video_input_frames','Video_input_lenght', 'Video_input_Resolution [width, height]', 'Hmmr-alphapose_output_frames','Hmmr-openpose_output_frames', 'error2d_alpha', 'error3d_alpha', 'error2d_open', 'error3d_open', 'PCK']
             writer = csv.writer(csvfile)
             if file_is_empty:
                 writer.writerow(headers)
@@ -279,10 +275,7 @@ def main(preds_alpha, preds_open, track_id, save_dir, ouput_dir, name_file, vide
         errors_dict = {}
         total_frame_open = None
         errors_dict = {
-            'MPJPE': None,
-            'MPJPE_PA': None,
             'PCK': None,
-            'AUC': None
         }
         total_frame_alpha = None
         error2d_alpha = None
@@ -294,11 +287,11 @@ def main(preds_alpha, preds_open, track_id, save_dir, ouput_dir, name_file, vide
 
         print('Saving evaluation results to', save_csv)
 
-        save = [[name_file, int(video_frame_count), video_length, [width, height], total_frame_alpha, total_frame_open, error2d_alpha, error3d_alpha, error2d_open, error3d_open, errors_dict['PCK'], errors_dict['AUC']]]
+        save = [[name_file, int(video_frame_count), video_length, [width, height], total_frame_alpha, total_frame_open, error2d_alpha, error3d_alpha, error2d_open, error3d_open, errors_dict['PCK']]]
 
         with open(save_csv, "a") as csvfile:
             file_is_empty = os.stat(save_csv).st_size == 0
-            headers = ['id_Video_action','Video_input_frames','Video_input_lenght', 'Video_input_Resolution [width, height]', 'Hmmr-alphapose_output_frames','Hmmr-openpose_output_frames', 'error2d_alpha', 'error3d_alpha', 'error2d_open', 'error3d_open', 'PCK', 'AUC']
+            headers = ['id_Video_action','Video_input_frames','Video_input_lenght', 'Video_input_Resolution [width, height]', 'Hmmr-alphapose_output_frames','Hmmr-openpose_output_frames', 'error2d_alpha', 'error3d_alpha', 'error2d_open', 'error3d_open', 'PCK']
             writer = csv.writer(csvfile)
             if file_is_empty:
                 writer.writerow(headers)

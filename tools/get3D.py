@@ -14,7 +14,7 @@ import pickle as pkl
 import numpy as np
 
 from tools import *
-from drawSkeleton import *
+
 
 SMPL_MODEL_PATH = ('model/neutral_smpl_with_cocoplustoesankles_reg.pkl')
 
@@ -112,11 +112,7 @@ class main(SMPL):
         smpl = SMPL(SMPL_MODEL_PATH)
         Jgl, root_rotation, root_joint = smpl(poses, shapes)
 
-        """
-        Draw Skeleton
-        """
-        #frame = 98
-        #make_image(jgl, save_dir, frame)
+
 
 
 
